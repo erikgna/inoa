@@ -1,0 +1,46 @@
+{% extends "main.html" %} {% block content %}
+<div class="container-fluid bg-dark py-5 min-vh-100">
+  <div
+    class="row justify-content-center align-items-center"
+    style="height: 100vh"
+  >
+    <div class="col-sm-6 col-md-4">
+      <div class="card">
+        <div class="card-body">
+          <h1 class="mb-2">Login</h1>
+          <p class="mb-4">
+            Acesse sua conta aqui, caso você não tenha uma conta, ela será
+            criada automaticamente.
+          </p>
+          <form method="post" action=".">
+            {% csrf_token %}
+            <div class="form-group">
+              <label for="email">Email:</label>
+              <input
+                type="email"
+                name="email"
+                id="email"
+                class="form-control"
+                placeholder="Seu email"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="password">Senha:</label>
+              <input
+                type="password"
+                name="password"
+                id="password"
+                class="form-control"
+                placeholder="Sua senha"
+                required
+              />
+            </div>
+            <button type="submit" class="btn btn-primary">Entrar</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
