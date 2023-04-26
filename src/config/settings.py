@@ -33,6 +33,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'web.apps.WebConfig',
+    'data_fetcher.apps.DataFetcherConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -49,6 +50,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'log_request_id.middleware.RequestIDMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -133,3 +135,43 @@ EMAIL_HOST_PASSWORD = 'zapdwrorppqeibgf'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
+
+LOG_REQUEST_ID_HEADER = 'HTTP_X_REQUEST_ID'
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': 'logs.log',
+            'maxBytes': 1024 * 1024,
+            'backupCount': 5,
+        },
+        'console': { 
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console', 'file'],  
+        'level': 'INFO',
+    },
+    'formatters': {
+        'verbose': {
+            'format': '[%(asctime)s] %(levelname)s [%(request_id)s] %(name)s: %(message)s'
+        }
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-b3viewer'
+    }
+}

@@ -1,0 +1,139 @@
+{% extends "main.html" %}{% load static %} {% block content %}
+<div
+  class="container mx-auto container-fluid bg-dark text-light py-5 min-vh-100"
+>
+  <div class="container-fluid d-flex justify-content-center align-items-center">
+    <div class="p-4" style="max-width: 900px">
+      <h1 class="mb-4">Novo monitoramento</h1>
+      {% if request.session.error_message %}
+      <div class="alert alert-danger mb-3">
+        {{ request.session.error_message }}
+      </div>
+      {% endif %}
+      <form method="post" action="/">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label for="stocks" class="form-label">Nome do ativo</label>
+          <select
+            id="stocks"
+            name="stocks"
+            class="form-control form-select2"
+            required
+          >
+            <option value="">Selecione uma opção</option>
+            {% for stock in stocks %}
+            <option value="{{ stock }}">{{ stock }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="max_value" class="form-label">Valor Máximo</label>
+          <input
+            type="number"
+            step="0.01"
+            id="max_value"
+            name="max_value"
+            class="form-control"
+            placeholder="Valor máximo para alerta"
+            style="-moz-appearance: textfield"
+            required
+          />
+        </div>
+        <div class="mb-3">
+          <label for="min_value" class="form-label">Valor Mínimo</label>
+          <input
+            type="number"
+            step="0.01"
+            id="min_value"
+            name="min_value"
+            class="form-control"
+            placeholder="Valor mínimo para alerta"
+            style="-moz-appearance: textfield"
+            required
+          />
+        </div>
+        <div class="mb-3">
+          <label for="time" class="form-label">Periocidade</label>
+          <select
+            id="time"
+            name="time"
+            class="form-control form-select2"
+            required
+          >
+            <option value="">Selecione uma opção</option>
+            {% for t in times %}
+            <option value="{{ t }}">{{ t }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="d-flex justify-content-center">
+          <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div
+    class="d-flex align-items-center justify-content-center flex-column mt-3"
+  >
+    <h1 class="text-center mb-4">Meus monitoramentos</h1>
+    {% if user_stocks %}
+    <table class="table table-dark table-striped table-bordered">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Preço máximo</th>
+          <th>Preço mínimo</th>
+          <th>Periodicidade</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for stock in user_stocks %}
+        <tr>
+          <td>{{ stock.symbol }}</td>
+          <td>{{ stock.max_price }}</td>
+          <td>{{ stock.min_price }}</td>
+          <td>{{ stock.periodicity }}</td>
+          <td>
+            <button class="delete-button btn btn-link" data-id="{{ stock.id }}">
+              <i class="fas fa-trash-alt text-white"></i>
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <img
+      src="{% static 'img/empty_stocks.svg' %}"
+      alt="Imagem"
+      class="img-fluid mb-5 mt-5 mx-auto"
+      style="max-width: 100%; max-height: 300px"
+    />
+    <p class="text-center mb-4">Você não possui ações ainda.</p>
+    {% endif %}
+  </div>
+</div>
+<script>
+  $(document).ready(function () {
+    $(".delete-button").on("click", function () {
+      var id = $(this).data("id");
+      var csrftoken = $("[name=csrfmiddlewaretoken]").val();
+      $.ajax({
+        url: "/user-stocks/delete/" + id + "/",
+        method: "DELETE",
+        beforeSend: function (xhr) {
+          xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        },
+        success: function (response) {
+          window.location.reload();
+        },
+        error: function (response) {
+          alert("Ocorreu um erro ao excluir o item.");
+        },
+      });
+    });
+  });
+</script>
+
+{% endblock %}

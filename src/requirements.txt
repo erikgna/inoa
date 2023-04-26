@@ -2,3 +2,5 @@ Django
 yfinance
 schedule
 plotly
+django-log-request-id
+pytz
