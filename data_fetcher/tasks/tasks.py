@@ -78,79 +78,90 @@ def verifyPriceTunnels():
             else:
                 pass
 
-def saveStockData():
+last_request_time = None
+def save_stock_data():
+    global last_request_time
+
     stocks = Stock.objects.all()
     for stock in stocks:
         url_yahoo = f'https://query1.finance.yahoo.com/v8/finance/chart/{stock.symbol}?interval={stock.interval}&range=1d'
         response_yahoo = requests.get(url_yahoo, headers={'User-agent': 'Mozilla/5.0'})
         data_yahoo = json.loads(response_yahoo.text)
-        if data_yahoo is not None and 'chart' in data_yahoo and 'result' in data_yahoo['chart'] and len(data_yahoo['chart']['result']) > 0:
+        if data_yahoo is not None and 'chart' in data_yahoo and 'result' in data_yahoo['chart'] and data_yahoo['chart']['result'] is not None:
             yf_data(stock, data_yahoo)
         else:
-            if not saveStockData.last_request_time or time.time() - saveStockData.last_request_time >= 60:
+            if not last_request_time or time.time() - last_request_time >= 60:
                 alpha_vantage_data(stock)
             else:
-                time_to_wait = 60 - (time.time() - saveStockData.last_request_time)
+                time_to_wait = 60 - (time.time() - last_request_time)
                 time.sleep(time_to_wait)
                 alpha_vantage_data(stock)
     verifyPriceTunnels()
 
 def yf_data(stock, data_yahoo):
+    
     brasil = pytz.timezone('America/Sao_Paulo')
-    timestamps = data_yahoo['chart']['result'][0]['timestamp']
-    opens = data_yahoo['chart']['result'][0]['indicators']['quote'][0]['open']
-    highs = data_yahoo['chart']['result'][0]['indicators']['quote'][0]['high']
-    lows = data_yahoo['chart']['result'][0]['indicators']['quote'][0]['low']
-    closes = data_yahoo['chart']['result'][0]['indicators']['quote'][0]['close']
-    volumes = data_yahoo['chart']['result'][0]['indicators']['quote'][0]['volume']
+    try:
+        timestamps = data_yahoo['chart']['result'][0]['timestamp']
+        opens = data_yahoo['chart']['result'][0]['indicators']['quote'][0]['open']
+        highs = data_yahoo['chart']['result'][0]['indicators']['quote'][0]['high']
+        lows = data_yahoo['chart']['result'][0]['indicators']['quote'][0]['low']
+        closes = data_yahoo['chart']['result'][0]['indicators']['quote'][0]['close']
+        volumes = data_yahoo['chart']['result'][0]['indicators']['quote'][0]['volume']
 
-    for i in range(len(timestamps)):
-        stock_data, created = StockData.objects.get_or_create(
-            stock=stock,
-            date_time=datetime.datetime.fromtimestamp(timestamps[i]).astimezone(brasil),
-            defaults={
-                'open_price': opens[i] if opens[i] is not None else 0,
-                'high_price': highs[i] if highs[i] is not None else 0,
-                'low_price': lows[i] if lows[i] is not None else 0,
-                'close_price': closes[i] if closes[i] is not None else 0,
-                'volume': volumes[i] if volumes[i] is not None else 0
-            }
-        )
-        if not created:
-            stock_data.open_price = opens[i] if opens[i] is not None else 0
-            stock_data.high_price = highs[i] if highs[i] is not None else 0
-            stock_data.low_price = lows[i] if lows[i] is not None else 0
-            stock_data.close_price = closes[i] if closes[i] is not None else 0
-            stock_data.volume = volumes[i] if volumes[i] is not None else 0
-            stock_data.save()
-
-def alpha_vantage_data(stock):
-    brasil = pytz.timezone('America/Sao_Paulo')
-    url_alpha_vantage = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={stock.symbol}&interval={stock.interval}&apikey=I6A21HND55ZAQKPI'
-    response_alpha_vantage = requests.get(url_alpha_vantage, headers={'User-agent': 'Mozilla/5.0'})
-    saveStockData.last_request_time = time.time()
-    data_alpha_vantage = json.loads(response_alpha_vantage.text)
-    if data_alpha_vantage is not None and 'Time Series ({})'.format(stock.interval) in data_alpha_vantage:
-        for key in data_alpha_vantage['Time Series ({})'.format(stock.interval)]:
+        for i in range(len(timestamps)):
             stock_data, created = StockData.objects.get_or_create(
                 stock=stock,
-                date_time=datetime.datetime.strptime(key, '%Y-%m-%d %H:%M:%S').astimezone(brasil),
-                defaults={ 'open_price': float(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['1. open']),
-            'high_price': float(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['2. high']),
-            'low_price': float(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['3. low']),
-            'close_price': float(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['4. close']),
-            'volume': int(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['5. volume'])
-            }
-        )
-        if not created:
-            stock_data.open_price = float(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['1. open'])
-            stock_data.high_price = float(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['2. high'])
-            stock_data.low_price = float(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['3. low'])
-            stock_data.close_price = float(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['4. close'])
-            stock_data.volume = int(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['5. volume'])
-            stock_data.save()
+                date_time=datetime.datetime.fromtimestamp(timestamps[i]).astimezone(brasil),
+                defaults={
+                    'open_price': opens[i] if opens[i] is not None else 0,
+                    'high_price': highs[i] if highs[i] is not None else 0,
+                    'low_price': lows[i] if lows[i] is not None else 0,
+                    'close_price': closes[i] if closes[i] is not None else 0,
+                    'volume': volumes[i] if volumes[i] is not None else 0
+                }
+            )
+            if not created:
+                stock_data.open_price = opens[i] if opens[i] is not None else 0
+                stock_data.high_price = highs[i] if highs[i] is not None else 0
+                stock_data.low_price = lows[i] if lows[i] is not None else 0
+                stock_data.close_price = closes[i] if closes[i] is not None else 0
+                stock_data.volume = volumes[i] if volumes[i] is not None else 0
+                stock_data.save()
+    except:
+        pass
 
+def alpha_vantage_data(stock):
+    global last_request_time
+    
+    brasil = pytz.timezone('America/Sao_Paulo')
+    url_alpha_vantage = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={stock.symbol}&interval={stock.interval}&apikey=I6A21HND55ZAQKPI'
+    try:
+        response_alpha_vantage = requests.get(url_alpha_vantage, headers={'User-agent': 'Mozilla/5.0'})
+        last_request_time = time.time()
+        data_alpha_vantage = json.loads(response_alpha_vantage.text)
+        if data_alpha_vantage is not None and 'Time Series ({})'.format(stock.interval) in data_alpha_vantage:
+            for key in data_alpha_vantage['Time Series ({})'.format(stock.interval)]:
+                stock_data, created = StockData.objects.get_or_create(
+                    stock=stock,
+                    date_time=datetime.datetime.strptime(key, '%Y-%m-%d %H:%M:%S').astimezone(brasil),
+                    defaults={ 'open_price': float(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['1. open']),
+                'high_price': float(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['2. high']),
+                'low_price': float(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['3. low']),
+                'close_price': float(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['4. close']),
+                'volume': int(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['5. volume'])
+                }
+            )
+            if not created:
+                stock_data.open_price = float(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['1. open'])
+                stock_data.high_price = float(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['2. high'])
+                stock_data.low_price = float(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['3. low'])
+                stock_data.close_price = float(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['4. close'])
+                stock_data.volume = int(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['5. volume'])
+                stock_data.save()
+    except:
+        pass
 def start_scheduler():
     scheduler = Scheduler()
-    scheduler.every(15).minutes.do(saveStockData)
+    scheduler.every().day.do(save_stock_data)
     scheduler.run_continuously()

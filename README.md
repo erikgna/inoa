@@ -4,6 +4,8 @@ Este é um projeto em Django que faz uso de modelos, visualizações e autentica
 
 ## Importante!!
 
+A requisição de dados e checagem para avisar o cliente é demorada por questões de limitações da API.
+
 1. Foram usadas duas API's para a aquisição de dados de ações, o Yahoo Finances (não havia todas as ações necessárias) e a Alpha Vantage (requisições diárias e por minuto limitadas). Foram escolhidas as duas, pois continham boas base de dados com períodos curtos (minutos).
 2. Para rodar o projeto, é necessário configurar o seu serviço de email no arquivo .env.
 
