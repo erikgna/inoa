@@ -161,7 +161,16 @@ def alpha_vantage_data(stock):
                 stock_data.save()
     except:
         pass
+
+continuous_thread = None 
 def start_scheduler():
+    global continuous_thread
+
+    if continuous_thread and continuous_thread.is_alive():
+        return
+    
     scheduler = Scheduler()
-    scheduler.every().day.do(save_stock_data)
+    scheduler.every(15).minutes.do(save_stock_data)
     scheduler.run_continuously()
+    continuous_thread = threading.Thread(target=lambda: cease_continuous_run.wait())
+    continuous_thread.start()
