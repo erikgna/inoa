@@ -171,6 +171,6 @@ def start_scheduler():
     
     scheduler = Scheduler()
     scheduler.every(15).minutes.do(save_stock_data)
-    scheduler.run_continuously()
+    cease_continuous_run = scheduler.run_continuously()
     continuous_thread = threading.Thread(target=lambda: cease_continuous_run.wait())
     continuous_thread.start()
