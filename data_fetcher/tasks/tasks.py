@@ -126,7 +126,7 @@ def yf_data(stock, data_yahoo):
 
 def alpha_vantage_data(stock):
     brasil = pytz.timezone('America/Sao_Paulo')
-    url_alpha_vantage = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={stock.symbol}&interval={stock.interval}&apikey=YOUR_API_KEY'
+    url_alpha_vantage = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={stock.symbol}&interval={stock.interval}&apikey=I6A21HND55ZAQKPI'
     response_alpha_vantage = requests.get(url_alpha_vantage, headers={'User-agent': 'Mozilla/5.0'})
     saveStockData.last_request_time = time.time()
     data_alpha_vantage = json.loads(response_alpha_vantage.text)

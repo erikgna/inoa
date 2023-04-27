@@ -4,3 +4,4 @@ schedule
 plotly
 django-log-request-id
 pytz
+python-dotenv
