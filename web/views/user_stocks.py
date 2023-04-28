@@ -38,8 +38,6 @@ class HomeView(View):
         return render(request, self.template_name, context)
     
     def post(self,request):
-        request.session['message'] = 'Monitoramento adicionado com sucesso.'
-
         if request.method == 'POST':
             stock_symbol = request.POST.get('stocks')
             max_value = request.POST.get('max_value')
@@ -49,7 +47,7 @@ class HomeView(View):
             # Verifica se o valor minímo é menor que o máximo
             if float(max_value) < float(min_value):
                 request.session['error_message'] = 'Valor máximo deve ser maior ou igual ao valor mínimo.'
-                return HttpResponseRedirect('/')
+                return HttpResponseRedirect('/user-stocks')
             
             # Adicionar a nova ação do usuário
             user_stock = UserStock(
@@ -60,5 +58,5 @@ class HomeView(View):
                 periodicity=time
             )
             user_stock.save()
-            return HttpResponseRedirect('/')
-        return HttpResponseRedirect('/')
+            return HttpResponseRedirect('/user-stocks')
+        return HttpResponseRedirect('/user-stocks')

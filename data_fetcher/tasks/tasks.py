@@ -9,21 +9,22 @@ from email_sender.tasks.tasks import send_email
 from web.models import Stock, UserStock, StockData
 from django.contrib.auth.models import User
 
+brasil = pytz.timezone('America/Sao_Paulo')
+
 def fill_stock_model():
     if len(Stock.objects.all()) < 1:
-        b3_stocks = [
-            'ABEV', 'ASAI', 'AZUL', 'B3SA', 'BBAS', 'BBDC', 'BBDC', 'BBSE',
-            'BEEF', 'BPAC', 'BRAP', 'BRDT', 'BRFS', 'BRKM', 'BRML', 'BTOW',
-            'CCRO', 'CESP', 'CIEL', 'CMIG', 'COGN', 'CPFE', 'CPLE', 'CRFB',
-            'CSAN', 'CSNA', 'CVCB', 'CYRE', 'ECOR', 'EGIE', 'ELET', 'ELET',
-            'EMBR', 'ENBR', 'ENGI', 'EQTL', 'EZTC', 'FLRY', 'GGBR', 'GNDI',
-            'GOAU', 'GOLL', 'HAPV', 'HGTX', 'HYPE', 'IGTA', 'IRBR', 'ITSA',
-            'ITUB', 'JBSS', 'JHSF', 'KLBN', 'LAME', 'LCAM', 'LIGT', 'LINX',
-            'LREN', 'MGLU', 'MOVI', 'MRFG', 'MRVE', 'MULT', 'NTCO', 'PCAR',
-            'PETR', 'PETR', 'POMO', 'PSSA', 'QUAL', 'RADL', 'RAIL', 'RENT',
-            'SANB', 'SBSP', 'SMLS', 'SULA', 'SUZB', 'TAEE', 'TIMP', 'TOTS',
-            'TRPL', 'UGPA', 'USIM', 'VALE', 'VIVT', 'VVAR', 'WEGE', 'YDUQ'
-        ]
+        b3_stocks = ['ABEV3.SA', 'ASAI3.SA', 'AZUL4.SA', 'B3SA3.SA', 'BBAS3.SA', 'BBDC3.SA', 'BBDC4.SA', 'BBSE3.SA',
+            'BEEF3.SA', 'BPAC11.SA', 'BRAP4.SA', 'BRDT3.SA', 'BRFS3.SA', 'BRKM5.SA', 'BRML3.SA', 'BTOW3.SA',
+            'CCRO3.SA', 'CESP6.SA', 'CIEL3.SA', 'CMIG4.SA', 'COGN3.SA', 'CPFE3.SA', 'CPLE6.SA', 'CRFB3.SA',
+            'CSAN3.SA', 'CSNA3.SA', 'CVCB3.SA', 'CYRE3.SA', 'ECOR3.SA', 'EGIE3.SA', 'ELET3.SA', 'ELET6.SA',
+            'EMBR3.SA', 'ENBR3.SA', 'ENGI11.SA', 'EQTL3.SA', 'EZTC3.SA', 'FLRY3.SA', 'GGBR4.SA', 'GNDI3.SA',
+            'GOAU4.SA', 'GOLL4.SA', 'HAPV3.SA', 'HGTX3.SA', 'HYPE3.SA', 'IGTA3.SA', 'IRBR3.SA', 'ITSA4.SA',
+            'ITUB4.SA', 'JBSS3.SA', 'JHSF3.SA', 'KLBN11.SA', 'LAME4.SA', 'LCAM3.SA', 'LIGT3.SA', 'LINX3.SA',
+            'LREN3.SA', 'MGLU3.SA', 'MOVI3.SA', 'MRFG3.SA', 'MRVE3.SA', 'MULT3.SA', 'NTCO3.SA', 'PCAR3.SA',
+            'PETR3.SA', 'PETR4.SA', 'POMO4.SA', 'PSSA3.SA', 'QUAL3.SA', 'RADL3.SA', 'RAIL3.SA', 'RENT3.SA',
+            'SANB11.SA', 'SBSP3.SA', 'SMLS3.SA', 'SULA11.SA', 'SUZB3.SA', 'TAEE11.SA', 'TIMP3.SA', 'TOTS3.SA',
+            'TRPL4.SA', 'UGPA3.SA', 'USIM5.SA', 'VALE3.SA', 'VIVT3.SA', 'VVAR3.SA', 'WEGE3.SA', 'YDUQ3.SA']
+
 
         intervals = ['1m', '5m', '15m', '30m', '60m']
         for stock in b3_stocks:
@@ -54,34 +55,31 @@ def verifyPriceTunnels():
     users = User.objects.all()
     for user in users:
         user_stocks = UserStock.objects.filter(user=user)
-        user_stocks = UserStock.objects.filter()
+        exceeded_prices = {}
         for user_stock in user_stocks:
             stock_data = StockData.objects.filter(
                 stock__symbol=user_stock.symbol,
-                date_time__gte=datetime.datetime.now() - datetime.timedelta(days=5)
+                date_time__gte=datetime.datetime.now().astimezone(brasil) - datetime.timedelta(days=5)
             ).order_by('-date_time')[:5]
             if stock_data:
-                exceeded_prices = []
+                symbol_interval = user_stock.symbol + " - " + user_stock.periodicity
                 for data in stock_data:
-                    if data.high_price > user_stock.max_price:
-                        exceeded_prices.append(f'{user_stock.symbol} atingiu o preço máximo de {data.high_price}')
-                    if data.low_price < user_stock.min_price:
-                        exceeded_prices.append(f'{user_stock.symbol} atingiu o preço mínimo de {data.low_price}')
-                if exceeded_prices:
-                    message = f"As seguintes ações excederam os preços definidos pelo usuário {user.username}:\n\n"
-                    message += "\n".join(exceeded_prices)
-                    send_email(
-                        'Ações que atingiram o preço máximo ou mínimo',
-                        message,
-                        [user.email]
-                    )
-            else:
-                pass
+                    if data.high_price > user_stock.max_price and symbol_interval not in exceeded_prices:
+                        exceeded_prices[symbol_interval] = f'atingiu o preço máximo de {data.high_price}'
+                    if data.low_price < user_stock.min_price and user_stock.symbol not in exceeded_prices:
+                        exceeded_prices[symbol_interval] = f'atingiu o preço mínimo de {data.low_price}'
+        if exceeded_prices:
+            message = f"As seguintes ações excederam os preços definidos pelo usuário {user.username}:\n\n"
+            for symbol in exceeded_prices:
+                message += f"{symbol} " + exceeded_prices[symbol] + "\n"
 
-last_request_time = None
+            send_email(
+                'Ações que atingiram o preço máximo ou mínimo',
+                message,
+                [user.email]
+            )
+
 def save_stock_data():
-    global last_request_time
-
     stocks = Stock.objects.all()
     for stock in stocks:
         url_yahoo = f'https://query1.finance.yahoo.com/v8/finance/chart/{stock.symbol}?interval={stock.interval}&range=1d'
@@ -90,17 +88,11 @@ def save_stock_data():
         if data_yahoo is not None and 'chart' in data_yahoo and 'result' in data_yahoo['chart'] and data_yahoo['chart']['result'] is not None:
             yf_data(stock, data_yahoo)
         else:
-            if not last_request_time or time.time() - last_request_time >= 60:
-                alpha_vantage_data(stock)
-            else:
-                time_to_wait = 60 - (time.time() - last_request_time)
-                time.sleep(time_to_wait)
-                alpha_vantage_data(stock)
+            pass
     verifyPriceTunnels()
 
 def yf_data(stock, data_yahoo):
-    
-    brasil = pytz.timezone('America/Sao_Paulo')
+    print(stock.symbol + " - " + stock.interval)
     try:
         timestamps = data_yahoo['chart']['result'][0]['timestamp']
         opens = data_yahoo['chart']['result'][0]['indicators']['quote'][0]['open']
@@ -131,37 +123,6 @@ def yf_data(stock, data_yahoo):
     except:
         pass
 
-def alpha_vantage_data(stock):
-    global last_request_time
-    
-    brasil = pytz.timezone('America/Sao_Paulo')
-    url_alpha_vantage = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={stock.symbol}&interval={stock.interval}&apikey=I6A21HND55ZAQKPI'
-    try:
-        response_alpha_vantage = requests.get(url_alpha_vantage, headers={'User-agent': 'Mozilla/5.0'})
-        last_request_time = time.time()
-        data_alpha_vantage = json.loads(response_alpha_vantage.text)
-        if data_alpha_vantage is not None and 'Time Series ({})'.format(stock.interval) in data_alpha_vantage:
-            for key in data_alpha_vantage['Time Series ({})'.format(stock.interval)]:
-                stock_data, created = StockData.objects.get_or_create(
-                    stock=stock,
-                    date_time=datetime.datetime.strptime(key, '%Y-%m-%d %H:%M:%S').astimezone(brasil),
-                    defaults={ 'open_price': float(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['1. open']),
-                'high_price': float(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['2. high']),
-                'low_price': float(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['3. low']),
-                'close_price': float(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['4. close']),
-                'volume': int(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['5. volume'])
-                }
-            )
-            if not created:
-                stock_data.open_price = float(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['1. open'])
-                stock_data.high_price = float(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['2. high'])
-                stock_data.low_price = float(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['3. low'])
-                stock_data.close_price = float(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['4. close'])
-                stock_data.volume = int(data_alpha_vantage['Time Series ({})'.format(stock.interval)][key]['5. volume'])
-                stock_data.save()
-    except:
-        pass
-
 continuous_thread = None 
 def start_scheduler():
     global continuous_thread
@@ -171,6 +132,6 @@ def start_scheduler():
     
     scheduler = Scheduler()
     scheduler.every(15).minutes.do(save_stock_data)
-    scheduler.run_continuously()
+    cease_continuous_run = scheduler.run_continuously()
     continuous_thread = threading.Thread(target=lambda: cease_continuous_run.wait())
     continuous_thread.start()

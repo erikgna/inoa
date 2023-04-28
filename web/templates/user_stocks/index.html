@@ -10,7 +10,7 @@
         {{ request.session.error_message }}
       </div>
       {% endif %}
-      <form method="post" action="/">
+      <form method="post" action="/user-stocks/">
         {% csrf_token %}
         <div class="mb-3">
           <label for="stocks" class="form-label">Nome do ativo</label>

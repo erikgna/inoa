@@ -55,11 +55,11 @@
             <table class="table table-striped table-hover table-dark">
               <thead>
                 <tr>
-                  <th>Date/Time</th>
-                  <th>Open Price</th>
-                  <th>High Price</th>
-                  <th>Low Price</th>
-                  <th>Close Price</th>
+                  <th>Data</th>
+                  <th>Abertura</th>
+                  <th>Maior preço</th>
+                  <th>Menor preço</th>
+                  <th>Fechamento</th>
                   <th>Volume</th>
                 </tr>
               </thead>
@@ -88,6 +88,7 @@
       var interval = $("#interval").val();
       $("#interval").change(function () {
         interval = $(this).val();
+        $(".accordion-collapse").collapse("hide");
       });
 
       $(".accordion-header").click(function () {
