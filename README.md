@@ -13,7 +13,6 @@ Este é um projeto em Django que faz uso de modelos, visualizações e autentica
 2. Crie um ambiente virtual com `python -m venv <env_name>`
 3. Acesse o ambiente virtual com `source env/bin/activate`
 4. Instale as dependências: `pip install -r requirements.txt`
-5. Execute as migrações do banco de dados: `python manage.py migrate`
 
 ## Uso
 
