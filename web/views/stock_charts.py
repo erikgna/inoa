@@ -35,8 +35,8 @@ class StockChartsView(View):
             symbol = form.cleaned_data['symbol']
             interval = form.cleaned_data['interval']
         else:
-            symbol = "ABEV"
-            interval = "1m"
+            symbol = "ABEV3.SA"
+            interval = "15m"
 
         # Obtém os dados do estoque com base no símbolo e intervalo fornecidos
         stock = Stock.objects.get(symbol=symbol, interval=interval)
