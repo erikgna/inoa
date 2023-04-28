@@ -17,9 +17,6 @@ COPY . .
 ENV DJANGO_SETTINGS_MODULE=config.settings
 ENV PYTHONUNBUFFERED=1
 
-# Executa as migrações do Django
-RUN python manage.py migrate
-
 # Expõe a porta 8000 da imagem para o host
 EXPOSE 8000
 
