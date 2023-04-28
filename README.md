@@ -10,8 +10,9 @@ Este é um projeto em Django que faz uso de modelos, visualizações e autentica
 ## Instalação
 
 1. Clone o repositório: `git clone https://github.com/erikgna/inoa.git`
-2. Instale as dependências: `pip install -r requirements.txt`
-3. Execute as migrações do banco de dados: `python manage.py migrate`
+2. Crie um ambiente virtual com `python -m venv <env_name>`
+3. Instale as dependências: `pip install -r requirements.txt`
+4. Execute as migrações do banco de dados: `python manage.py migrate`
 
 ## Uso
 
